@@ -13,6 +13,7 @@
 *       - Majority of support is currently limited to Bezier curves
 *       - "GetSplineNearestT...()" and "GetSplineLength...()" functions currently only available for
 *         Linear splines due to no closed definition existing for higher spline degree
+*       - 3D spline normal requires knowing what angle around the tangent to take the normal at
 *
 *   CONFIGURATION:
 *       #define RSPLINES_IMPLEMENTATION
@@ -241,8 +242,11 @@ RSPLAPI void GetSplineControlBezierCubic3D(Vector3 startPos, Vector3 oneThirdsPo
 
 // Spline segment slope evaluation functions, for a given t [0.0f .. 1.0f]
 RSPLAPI Vector3 GetSplineVelocityLinear3D(Vector3 startPos, Vector3 endPos);                           // Get (evaluate) spline velocity: Linear 3D
+RSPLAPI Vector3 GetSplineTangentLinear3D(Vector3 startPos, Vector3 endPos);                            // Get (evaluate) spline tangent: Linear 3D
 RSPLAPI Vector3 GetSplineVelocityBezierQuad3D(Vector3 startPos, Vector3 controlPos, Vector3 endPos, float t); // Get (evaluate) spline velocity: Quadratic Bezier 3D
+RSPLAPI Vector3 GetSplineTangentBezierQuad3D(Vector3 startPos, Vector3 controlPos, Vector3 endPos, float t); // Get (evaluate) spline tangent: Quadratic Bezier 3D
 RSPLAPI Vector3 GetSplineVelocityBezierCubic3D(Vector3 startPos, Vector3 startControlPos, Vector3 endControlPos, Vector3 endPos, float t); // Get (evaluate) spline velocity: Cubic Bezier 3D
+RSPLAPI Vector3 GetSplineTangentBezierCubic3D(Vector3 startPos, Vector3 startControlPos, Vector3 endControlPos, Vector3 endPos, float t); // Get (evaluate) spline tangent: Cubic Bezier 3D
 RSPLAPI Vector3 GetSplineAccelerationBezierQuad3D(Vector3 startPos, Vector3 controlPos, Vector3 endPos); // Get (evaluate) spline acceleration: Quadratic Bezier 3D
 RSPLAPI Vector3 GetSplineAccelerationBezierCubic3D(Vector3 startPos, Vector3 startControlPos, Vector3 endControlPos, Vector3 endPos, float t); // Get (evaluate) spline acceleration: Cubic Bezier 3D
 RSPLAPI Vector3 GetSplineJoltBezierCubic3D(Vector3 startPos, Vector3 startControlPos, Vector3 endControlPos, Vector3 endPos); // Get (evaluate) spline jolt: Cubic Bezier 3D
@@ -1417,6 +1421,24 @@ Vector3 GetSplineVelocityLinear3D(Vector3 startPos, Vector3 endPos)
     return velocity;
 }
 
+// Get (evaluate) spline tangent: Linear 3D
+Vector3 GetSplineTangentLinear3D(Vector3 startPos, Vector3 endPos)
+{
+    Vector3 tangent = { 0 };
+
+    tangent.x = endPos.x - startPos.x;
+    tangent.y = endPos.y - startPos.y;
+    tangent.z = endPos.z - startPos.z;
+
+    float speedInv = 1.0f/sqrtf(tangent.x*tangent.x + tangent.y*tangent.y + tangent.z*tangent.z);
+
+    tangent.x *= speedInv;
+    tangent.y *= speedInv;
+    tangent.z *= speedInv;
+
+    return tangent;
+}
+
 // Get spline direction and speed for a given t [0.0f .. 1.0f], Quadratic Bezier
 //
 // Normalize to get the "forward" direction of the curve at t
@@ -1432,6 +1454,27 @@ Vector3 GetSplineVelocityBezierQuad3D(Vector3 startPos, Vector3 controlPos, Vect
     velocity.z = a*(controlPos.z - startPos.z) + b*(endPos.z - controlPos.z);
 
     return velocity;
+}
+
+// Get (evaluate) spline tangent: Quadratic Bezier 3D
+Vector3 GetSplineTangentBezierQuad3D(Vector3 startPos, Vector3 controlPos, Vector3 endPos, float t)
+{
+    Vector3 tangent = { 0 };
+
+    float a = 2.0f*(1.0f - t);
+    float b = 2.0f*t;
+
+    tangent.x = a*(controlPos.x - startPos.x) + b*(endPos.x - controlPos.x);
+    tangent.y = a*(controlPos.y - startPos.y) + b*(endPos.y - controlPos.y);
+    tangent.z = a*(controlPos.z - startPos.z) + b*(endPos.z - controlPos.z);
+    
+    float speedInv = 1.0f/sqrtf(tangent.x*tangent.x + tangent.y*tangent.y + tangent.z*tangent.z);
+
+    tangent.x *= speedInv;
+    tangent.y *= speedInv;
+    tangent.z *= speedInv;
+
+    return tangent;
 }
 
 // Get spline direction and speed for a given t [0.0f .. 1.0f], Cubic Bezier
@@ -1450,6 +1493,28 @@ Vector3 GetSplineVelocityBezierCubic3D(Vector3 startPos, Vector3 startControlPos
     velocity.z = a*(startControlPos.z - startPos.z) + b*(endControlPos.z - startControlPos.z) + c*(endPos.z - endControlPos.z);
 
     return velocity;
+}
+
+// Get (evaluate) spline tangent: Cubic Bezier 3D
+Vector3 GetSplineTangentBezierCubic3D(Vector3 startPos, Vector3 startControlPos, Vector3 endControlPos, Vector3 endPos, float t)
+{
+    Vector3 tangent = { 0 };
+
+    float a = 3.0f*powf(1.0f - t, 2);
+    float b = 6.0f*(1.0f - t)*t;
+    float c = 3.0f*t*t;
+
+    tangent.x = a*(startControlPos.x - startPos.x) + b*(endControlPos.x - startControlPos.x) + c*(endPos.x - endControlPos.x);
+    tangent.y = a*(startControlPos.y - startPos.y) + b*(endControlPos.y - startControlPos.y) + c*(endPos.y - endControlPos.y);
+    tangent.z = a*(startControlPos.z - startPos.z) + b*(endControlPos.z - startControlPos.z) + c*(endPos.z - endControlPos.z);
+    
+    float speedInv = 1.0f/sqrtf(tangent.x*tangent.x + tangent.y*tangent.y + tangent.z*tangent.z);
+
+    tangent.x *= speedInv;
+    tangent.y *= speedInv;
+    tangent.z *= speedInv;
+
+    return tangent;
 }
 
 // Get spline rate of change, Quadratic Bezier

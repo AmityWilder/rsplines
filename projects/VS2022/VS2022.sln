@@ -9,6 +9,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "raylib", "raylib\raylib.vcx
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "examples", "examples", "{5DC256E9-D698-4D07-8AD7-DFDAE9125DE3}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "spline_3d", "examples\spline_3d.vcxproj", "{641CFF28-4C19-4791-BCC5-754F7A91BC41}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug.DLL|x64 = Debug.DLL|x64
@@ -53,12 +55,29 @@ Global
 		{E89D61AC-55DE-4482-AFD4-DF7242EBC859}.Release|x64.Build.0 = Release|x64
 		{E89D61AC-55DE-4482-AFD4-DF7242EBC859}.Release|x86.ActiveCfg = Release|Win32
 		{E89D61AC-55DE-4482-AFD4-DF7242EBC859}.Release|x86.Build.0 = Release|Win32
+		{641CFF28-4C19-4791-BCC5-754F7A91BC41}.Debug.DLL|x64.ActiveCfg = Debug.DLL|x64
+		{641CFF28-4C19-4791-BCC5-754F7A91BC41}.Debug.DLL|x64.Build.0 = Debug.DLL|x64
+		{641CFF28-4C19-4791-BCC5-754F7A91BC41}.Debug.DLL|x86.ActiveCfg = Debug.DLL|Win32
+		{641CFF28-4C19-4791-BCC5-754F7A91BC41}.Debug.DLL|x86.Build.0 = Debug.DLL|Win32
+		{641CFF28-4C19-4791-BCC5-754F7A91BC41}.Debug|x64.ActiveCfg = Debug|x64
+		{641CFF28-4C19-4791-BCC5-754F7A91BC41}.Debug|x64.Build.0 = Debug|x64
+		{641CFF28-4C19-4791-BCC5-754F7A91BC41}.Debug|x86.ActiveCfg = Debug|Win32
+		{641CFF28-4C19-4791-BCC5-754F7A91BC41}.Debug|x86.Build.0 = Debug|Win32
+		{641CFF28-4C19-4791-BCC5-754F7A91BC41}.Release.DLL|x64.ActiveCfg = Release.DLL|x64
+		{641CFF28-4C19-4791-BCC5-754F7A91BC41}.Release.DLL|x64.Build.0 = Release.DLL|x64
+		{641CFF28-4C19-4791-BCC5-754F7A91BC41}.Release.DLL|x86.ActiveCfg = Release.DLL|Win32
+		{641CFF28-4C19-4791-BCC5-754F7A91BC41}.Release.DLL|x86.Build.0 = Release.DLL|Win32
+		{641CFF28-4C19-4791-BCC5-754F7A91BC41}.Release|x64.ActiveCfg = Release|x64
+		{641CFF28-4C19-4791-BCC5-754F7A91BC41}.Release|x64.Build.0 = Release|x64
+		{641CFF28-4C19-4791-BCC5-754F7A91BC41}.Release|x86.ActiveCfg = Release|Win32
+		{641CFF28-4C19-4791-BCC5-754F7A91BC41}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{0981CA98-E4A5-4DF1-987F-A41D09131EFC} = {5DC256E9-D698-4D07-8AD7-DFDAE9125DE3}
+		{641CFF28-4C19-4791-BCC5-754F7A91BC41} = {5DC256E9-D698-4D07-8AD7-DFDAE9125DE3}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E926C768-6307-4423-A1EC-57E95B1FAB29}
