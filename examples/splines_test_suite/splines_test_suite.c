@@ -1,5 +1,7 @@
 #include <raylib.h>
 #define RSPLINES_IMPLEMENTATION
+#define RSPLINES_1D
+#define RSPLINES_3D
 #include <rsplines.h>
 
 int main()
