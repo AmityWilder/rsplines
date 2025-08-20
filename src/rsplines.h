@@ -65,7 +65,7 @@
 #define RSPLINES_VERSION_PATCH 0
 #define RSPLINES_VERSION  "0.1.0"
 
-#include "raylib.h"  // Vector2, Vector3, and BoundingBox
+#include "raylib.h"  // Vector2, Vector3
 
 // Function specifiers in case library is build/used as a shared library (Windows)
 // NOTE: Microsoft specifiers to tell compiler that symbols are imported/exported from a .dll
@@ -95,6 +95,25 @@
 extern "C" {            // Prevents name mangling of functions
 #endif
 
+#ifndef RL_VECTOR2_TYPE
+#define RL_VECTOR2_TYPE
+// Vector2, 2 components
+typedef struct Vector2 {
+    float x;
+    float y;
+} Vector2;
+#endif // RL_VECTOR2_TYPE
+
+#ifndef RL_VECTOR3_TYPE
+#define RL_VECTOR3_TYPE
+// Vector3, 3 components
+typedef struct Vector3 {
+    float x;
+    float y;
+    float z;
+} Vector3;
+#endif // RL_VECTOR3_TYPE
+
 // 1D bounds (range)
 typedef struct BoundingBox1 {
     float min;
@@ -108,7 +127,10 @@ typedef struct BoundingBox2 {
 } BoundingBox2;
 
 // 3D bounds (box)
-typedef BoundingBox BoundingBox3;
+typedef struct BoundingBox3 {
+    Vector3 min;
+    Vector3 max;
+} BoundingBox3;
 
 //----------------------------------------------------------------------------------
 // Global Variables Definition
@@ -177,6 +199,12 @@ RSPLAPI void GetSplineControlBezierCubic2D(Vector2 startPos, Vector2 oneThirdsPo
 RSPLAPI Vector2 GetSplineVelocityLinear2D(Vector2 startPos, Vector2 endPos);                           // Get (evaluate) spline velocity: Linear 2D
 RSPLAPI Vector2 GetSplineVelocityBezierQuad2D(Vector2 startPos, Vector2 controlPos, Vector2 endPos, float t); // Get (evaluate) spline velocity: Quadratic Bezier 2D
 RSPLAPI Vector2 GetSplineVelocityBezierCubic2D(Vector2 startPos, Vector2 startControlPos, Vector2 endControlPos, Vector2 endPos, float t); // Get (evaluate) spline velocity: Cubic Bezier 2D
+RSPLAPI Vector2 GetSplineTangentLinear2D(Vector2 startPos, Vector2 endPos);                            // Get (evaluate) spline tangent: Linear 2D
+RSPLAPI Vector2 GetSplineNormalLinear2D(Vector2 startPos, Vector2 endPos);                             // Get (evaluate) spline normal: Linear 2D
+RSPLAPI Vector2 GetSplineTangentBezierQuad2D(Vector2 startPos, Vector2 controlPos, Vector2 endPos, float t); // Get (evaluate) spline tangent: Quadratic Bezier 2D
+RSPLAPI Vector2 GetSplineNormalBezierQuad2D(Vector2 startPos, Vector2 controlPos, Vector2 endPos, float t); // Get (evaluate) spline normal: Quadratic Bezier 2D
+RSPLAPI Vector2 GetSplineTangentBezierCubic2D(Vector2 startPos, Vector2 startControlPos, Vector2 endControlPos, Vector2 endPos, float t); // Get (evaluate) spline tangent: Cubic Bezier 2D
+RSPLAPI Vector2 GetSplineNormalBezierCubic2D(Vector2 startPos, Vector2 startControlPos, Vector2 endControlPos, Vector2 endPos, float t); // Get (evaluate) spline normal: Cubic Bezier 2D
 RSPLAPI Vector2 GetSplineAccelerationBezierQuad2D(Vector2 startPos, Vector2 controlPos, Vector2 endPos); // Get (evaluate) spline acceleration: Quadratic Bezier 2D
 RSPLAPI Vector2 GetSplineAccelerationBezierCubic2D(Vector2 startPos, Vector2 startControlPos, Vector2 endControlPos, Vector2 endPos, float t); // Get (evaluate) spline acceleration: Cubic Bezier 2D
 RSPLAPI Vector2 GetSplineJoltBezierCubic2D(Vector2 startPos, Vector2 startControlPos, Vector2 endControlPos, Vector2 endPos); // Get (evaluate) spline jolt: Cubic Bezier 2D
@@ -780,6 +808,128 @@ Vector2 GetSplineVelocityBezierCubic2D(Vector2 startPos, Vector2 startControlPos
     velocity.y = a*(startControlPos.y - startPos.y) + b*(endControlPos.y - startControlPos.y) + c*(endPos.y - endControlPos.y);
 
     return velocity;
+}
+
+// Get (evaluate) spline tangent: Linear 2D
+Vector2 GetSplineTangentLinear2D(Vector2 startPos, Vector2 endPos)
+{
+    Vector2 tangent = { 0 };
+
+    tangent.x = endPos.x - startPos.x;
+    tangent.y = endPos.y - startPos.y;
+
+    float invSpeed = 1.0f/sqrtf(tangent.x*tangent.x + tangent.y*tangent.y);
+
+    tangent.x *= invSpeed;
+    tangent.y *= invSpeed;
+
+    return tangent;
+}
+
+// Get (evaluate) spline normal: Linear 2D
+Vector2 GetSplineNormalLinear2D(Vector2 startPos, Vector2 endPos)
+{
+    Vector2 normal = { 0 };
+    Vector2 tangent = { 0 };
+
+    tangent.x = endPos.x - startPos.x;
+    tangent.y = endPos.y - startPos.y;
+
+    float invSpeed = 1.0f/sqrtf(tangent.x*tangent.x + tangent.y*tangent.y);
+
+    tangent.x *= invSpeed;
+    tangent.y *= invSpeed;
+
+    normal.x = tangent.y;
+    normal.y = -tangent.x;
+
+    return normal;
+}
+
+// Get (evaluate) spline tangent: Quadratic Bezier 2D
+Vector2 GetSplineTangentBezierQuad2D(Vector2 startPos, Vector2 controlPos, Vector2 endPos, float t)
+{
+    Vector2 tangent = { 0 };
+
+    float a = 2.0f*(1.0f - t);
+    float b = 2.0f*t;
+
+    tangent.x = a*(controlPos.x - startPos.x) + b*(endPos.x - controlPos.x);
+    tangent.y = a*(controlPos.y - startPos.y) + b*(endPos.y - controlPos.y);
+
+    float invSpeed = 1.0f/sqrtf(tangent.x*tangent.x + tangent.y*tangent.y);
+
+    tangent.x *= invSpeed;
+    tangent.y *= invSpeed;
+
+    return tangent;
+}
+
+// Get (evaluate) spline normal: Quadratic Bezier 2D
+Vector2 GetSplineNormalBezierQuad2D(Vector2 startPos, Vector2 controlPos, Vector2 endPos, float t)
+{
+    Vector2 normal = { 0 };
+    Vector2 tangent = { 0 };
+
+    float a = 2.0f*(1.0f - t);
+    float b = 2.0f*t;
+
+    tangent.x = a*(controlPos.x - startPos.x) + b*(endPos.x - controlPos.x);
+    tangent.y = a*(controlPos.y - startPos.y) + b*(endPos.y - controlPos.y);
+
+    float invSpeed = 1.0f/sqrtf(tangent.x*tangent.x + tangent.y*tangent.y);
+
+    tangent.x *= invSpeed;
+    tangent.y *= invSpeed;
+
+    normal.x = tangent.y;
+    normal.y = -tangent.x;
+
+    return normal;
+}
+
+// Get (evaluate) spline tangent: Cubic Bezier 2D
+Vector2 GetSplineTangentBezierCubic2D(Vector2 startPos, Vector2 startControlPos, Vector2 endControlPos, Vector2 endPos, float t)
+{
+    Vector2 tangent = { 0 };
+
+    float a = 3.0f*powf(1.0f - t, 2);
+    float b = 6.0f*(1.0f - t)*t;
+    float c = 3.0f*t*t;
+
+    tangent.x = a*(startControlPos.x - startPos.x) + b*(endControlPos.x - startControlPos.x) + c*(endPos.x - endControlPos.x);
+    tangent.y = a*(startControlPos.y - startPos.y) + b*(endControlPos.y - startControlPos.y) + c*(endPos.y - endControlPos.y);
+
+    float invSpeed = 1.0f/sqrtf(tangent.x*tangent.x + tangent.y*tangent.y);
+
+    tangent.x *= invSpeed;
+    tangent.y *= invSpeed;
+
+    return tangent;
+}
+
+// Get (evaluate) spline normal: Cubic Bezier 2D
+Vector2 GetSplineNormalBezierCubic2D(Vector2 startPos, Vector2 startControlPos, Vector2 endControlPos, Vector2 endPos, float t)
+{
+    Vector2 tangent = { 0 };
+    Vector2 normal = { 0 };
+
+    float a = 3.0f*powf(1.0f - t, 2);
+    float b = 6.0f*(1.0f - t)*t;
+    float c = 3.0f*t*t;
+
+    tangent.x = a*(startControlPos.x - startPos.x) + b*(endControlPos.x - startControlPos.x) + c*(endPos.x - endControlPos.x);
+    tangent.y = a*(startControlPos.y - startPos.y) + b*(endControlPos.y - startControlPos.y) + c*(endPos.y - endControlPos.y);
+
+    float invSpeed = 1.0f/sqrtf(tangent.x*tangent.x + tangent.y*tangent.y);
+
+    tangent.x *= invSpeed;
+    tangent.y *= invSpeed;
+
+    normal.x = tangent.y;
+    normal.y = -tangent.x;
+
+    return normal;
 }
 
 // Get spline rate of change, Quadratic Bezier
