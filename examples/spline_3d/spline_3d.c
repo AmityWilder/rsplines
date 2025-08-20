@@ -1,29 +1,32 @@
 #include <raylib.h>
 #include <raymath.h>
 #define RSPLINES_IMPLEMENTATION
+#define RSPLINES_1D
 #define RSPLINES_3D
 #include <rsplines.h>
 
 int main()
 {
-    InitWindow(640, 480, "Spline Test Suite");
+    InitWindow(640, 480, "Spline 3D");
 
     DisableCursor();
     SetTargetFPS(0);
 
     Camera3D camera = {
-        { 5, 5, 5 },
+        { 10, 10, 10 },
         { 0, 0, 0 },
         { 0, 1, 0 },
         45.0f,
         CAMERA_PERSPECTIVE
     };
 
+    float thicks[] = { 0.0f, 1.0f, -0.675f, 0.5f };
+
     Vector3 points[] = {
-        { 0, 0, 0 },
-        { -1, 5, 0 },
-        { 5, 1, -8 },
-        { 5, 3, 0 },
+        { 0.0f, 1.0f, -2.0f },
+        { -1.0f, 3.0f, 1.0f },
+        { 1.0f, 1.0f, 3.0f },
+        { -1.0f, 5.0f, 5.0f },
     };
 
     float draggingDistance = INFINITY;
@@ -68,17 +71,20 @@ int main()
                 Vector3 point2Prev = { 0 };
                 Vector3 point3Prev = { 0 };
                 Vector3 point4Prev = { 0 };
+                Vector3 ctrl1, ctrl2;
+                GetSplineControlBezierCubic3D(points[0], points[1], points[2], points[3], &ctrl1, &ctrl2);
                 for (int i = 0; i <= 100; ++i)
                 {
                     float t = (float)i/100;
-                    Vector3 point = GetSplinePointBezierCubic3D(points[0], points[1], points[2], points[3], t);
-                    Vector3 tangent = GetSplineTangentBezierCubic3D(points[0], points[1], points[2], points[3], t);
+                    float thick = GetSplinePointBezierCubic1D(thicks[0], thicks[1], thicks[2], thicks[3], t); // Variable thickness
+                    Vector3 point = GetSplinePointBezierCubic3D(points[0], ctrl1, ctrl2, points[3], t);
+                    Vector3 tangent = GetSplineTangentBezierCubic3D(points[0], ctrl1, ctrl2, points[3], t);
                     Vector3 normalH = Vector3Normalize(Vector3CrossProduct(tangent, (Vector3){ 0, 1, 0 }));
                     Vector3 normalV = Vector3Normalize(Vector3CrossProduct(normalH, tangent));
-                    Vector3 point1 = Vector3Add(pointPrev, Vector3Scale(normalH, 0.1f));
-                    Vector3 point2 = Vector3Add(pointPrev, Vector3Scale(normalH, -0.1f));
-                    Vector3 point3 = Vector3Add(pointPrev, Vector3Scale(normalV, 0.1f));
-                    Vector3 point4 = Vector3Add(pointPrev, Vector3Scale(normalV, -0.1f));
+                    Vector3 point1 = Vector3Add(point, Vector3Scale(normalH, thick));
+                    Vector3 point2 = Vector3Add(point, Vector3Scale(normalH, -thick));
+                    Vector3 point3 = Vector3Add(point, Vector3Scale(normalV, thick));
+                    Vector3 point4 = Vector3Add(point, Vector3Scale(normalV, -thick));
                     if (i > 0)
                     {
                         DrawLine3D(pointPrev, point, GRAY);
@@ -97,8 +103,8 @@ int main()
                 {
                     DrawSphereWires(points[i], 0.1f, 2, 6, ((&points[i] == draggingPoint)? YELLOW : MAGENTA));
                 }
-                DrawLine3D(points[0], points[1], MAGENTA);
-                DrawLine3D(points[3], points[2], MAGENTA);
+                //DrawLine3D(points[0], ctrl1, MAGENTA);
+                //DrawLine3D(points[3], ctrl2, MAGENTA);
 
             EndMode3D();
 
