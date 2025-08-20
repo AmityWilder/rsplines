@@ -10,16 +10,21 @@ int main()
 
     SetTargetFPS(60);
 
+    Vector2 startPos = { 160.0f, 120.0f };
+    Vector2 endPos = { 480.0f, 360.0f };
+
     while (!WindowShouldClose())
     {
-        // Confirm linking succeeds
-        float point = GetSplinePointBezierCubic1D(0.0f, 0.25f, 0.75f, 1.0f, 0.5f);
+        if (IsKeyDown(KEY_ONE)) startPos = GetMousePosition();
+        if (IsKeyDown(KEY_TWO)) endPos = GetMousePosition();
+
+        float length = GetSplineLengthLinear2D(startPos, endPos);
 
         BeginDrawing();
         ClearBackground(BLACK);
 
-        // Should be a dot in about the center of the window
-        DrawPixelV((Vector2){ 320.0f + point, 240.0f }, WHITE);
+        DrawLineV((Vector2){ 10.0f, 10.0f }, (Vector2) { 10.0f + length, 10.0f }, BLUE);
+        DrawSplineSegmentLinear(startPos, endPos, 1.0f, WHITE);
 
         EndDrawing();
     }

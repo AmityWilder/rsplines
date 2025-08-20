@@ -8,6 +8,12 @@
 *   FEATURES:
 *       - Spline math
 *
+*   LIMITATIONS:
+*       - Curvature is not currently supported for any number of dimensions except for 2
+*       - Majority of support is currently limited to Bezier curves
+*       - "GetSplineNearestT...()" and "GetSplineLength...()" functions currently only available for
+*         Linear splines due to no closed definition existing for higher spline degree
+*
 *   CONFIGURATION:
 *       #define RSPLINES_IMPLEMENTATION
 *           Generates the implementation of the library into the included file
@@ -59,7 +65,7 @@
 #define RSPLINES_VERSION_PATCH 0
 #define RSPLINES_VERSION  "0.1.0"
 
-#include "raylib.h"  // Vector2 and Vector3
+#include "raylib.h"  // Vector2, Vector3, and BoundingBox
 
 // Function specifiers in case library is build/used as a shared library (Windows)
 // NOTE: Microsoft specifiers to tell compiler that symbols are imported/exported from a .dll
@@ -142,6 +148,12 @@ RSPLAPI BoundingBox1 GetSplineBoundsBezierLinear1D(float startPos, float endPos)
 RSPLAPI BoundingBox1 GetSplineBoundsBezierQuad1D(float startPos, float controlPos, float endPos);      // Get (evaluate) spline bounds range: Quadratic Bezier 1D
 RSPLAPI BoundingBox1 GetSplineBoundsBezierCubic1D(float startPos, float startControlPos, float endControlPos, float endPos); // Get (evaluate) spline bounds range: Cubic Bezier 1D
 
+// Spline segment length evaluation functions
+RSPLAPI float GetSplineLengthSqrLinear1D(float startPos, float endPos);                                // Get (evaluate) squared length of spline: Linear 1D
+RSPLAPI float GetSplineLengthLinear1D(float startPos, float endPos);                                   // Get (evaluate) length of spline: Linear 1D
+RSPLAPI float GetSubSplineLengthSqrLinear1D(float startPos, float endPos, float t0, float t1);         // Get (evaluate) squared length of subspline: Linear 1D
+RSPLAPI float GetSubSplineLengthLinear1D(float startPos, float endPos, float t0, float t1);            // Get (evaluate) length of subspline: Linear 1D
+
 RSPLAPI float GetSplineNearestTLinear1D(float startPos, float endPos, float point);                    // Get (evaluate) nearest t value to point: Linear 1D
 
 #endif // RSPLINES_1D
@@ -174,6 +186,12 @@ RSPLAPI BoundingBox2 GetSplineBoundsBezierLinear2D(Vector2 startPos, Vector2 end
 RSPLAPI BoundingBox2 GetSplineBoundsBezierQuad2D(Vector2 startPos, Vector2 controlPos, Vector2 endPos); // Get (evaluate) spline bounds rectangle: Quadratic Bezier 2D
 RSPLAPI BoundingBox2 GetSplineBoundsBezierCubic2D(Vector2 startPos, Vector2 startControlPos, Vector2 endControlPos, Vector2 endPos); // Get (evaluate) spline bounds rectangle: Cubic Bezier 2D
 
+// Spline segment length evaluation functions
+RSPLAPI float GetSplineLengthSqrLinear2D(Vector2 startPos, Vector2 endPos);                            // Get (evaluate) squared length of spline: Linear 2D
+RSPLAPI float GetSplineLengthLinear2D(Vector2 startPos, Vector2 endPos);                               // Get (evaluate) length of spline: Linear 2D
+RSPLAPI float GetSubSplineLengthSqrLinear2D(Vector2 startPos, Vector2 endPos, float t0, float t1);     // Get (evaluate) squared length of subspline: Linear 2D
+RSPLAPI float GetSubSplineLengthLinear2D(Vector2 startPos, Vector2 endPos, float t0, float t1);        // Get (evaluate) length of subspline: Linear 2D
+
 RSPLAPI float GetSplineCurvatureBezierCubic2D(Vector2 startPos, Vector2 startControlPos, Vector2 endControlPos, Vector2 endPos, float t); // Get (evaluate) spline curvature: Cubic Bezier 2D
 RSPLAPI float GetSplineNearestTLinear2D(Vector2 startPos, Vector2 endPos, Vector2 point);              // Get (evaluate) nearest t value to point: Linear 2D
 
@@ -205,6 +223,12 @@ RSPLAPI Vector3 GetSplineJoltBezierCubic3D(Vector3 startPos, Vector3 startContro
 RSPLAPI BoundingBox3 GetSplineBoundsBezierLinear3D(Vector3 startPos, Vector3 endPos);                  // Get (evaluate) spline bounding box: Linear 3D
 RSPLAPI BoundingBox3 GetSplineBoundsBezierQuad3D(Vector3 startPos, Vector3 controlPos, Vector3 endPos); // Get (evaluate) spline bounding box: Quadratic Bezier 3D
 RSPLAPI BoundingBox3 GetSplineBoundsBezierCubic3D(Vector3 startPos, Vector3 startControlPos, Vector3 endControlPos, Vector3 endPos); // Get (evaluate) spline bounding box: Cubic Bezier 3D
+
+// Spline segment length evaluation functions
+RSPLAPI float GetSplineLengthSqrLinear3D(Vector3 startPos, Vector3 endPos);                            // Get (evaluate) squared length of spline: Linear 3D
+RSPLAPI float GetSplineLengthLinear3D(Vector3 startPos, Vector3 endPos);                               // Get (evaluate) length of spline: Linear 3D
+RSPLAPI float GetSubSplineLengthSqrLinear3D(Vector3 startPos, Vector3 endPos, float t0, float t1);     // Get (evaluate) squared length of subspline: Linear 3D
+RSPLAPI float GetSubSplineLengthLinear3D(Vector3 startPos, Vector3 endPos, float t0, float t1);        // Get (evaluate) length of subspline: Linear 3D
 
 RSPLAPI float GetSplineNearestTLinear3D(Vector3 startPos, Vector3 endPos, Vector3 point);              // Get (evaluate) nearest t value to point: Linear 3D
 
@@ -549,16 +573,60 @@ BoundingBox1 GetSplineBoundsBezierCubic1D(float startPos, float startControlPos,
     return bounds;
 }
 
+// Get (evaluate) square of length of spline along a t-value range: Linear 1D
+float GetSplineLengthSqrLinear1D(float startPos, float endPos)
+{
+    float lengthSqr = 0.0f;
+
+    lengthSqr = (endPos - startPos)*(endPos - startPos);
+
+    return lengthSqr;
+}
+
+// Get (evaluate) square of length of spline along a t-value range: Linear 1D
+float GetSplineLengthLinear1D(float startPos, float endPos)
+{
+    float length = 0.0f;
+
+    float lengthSqr = (endPos - startPos)*(endPos - startPos);
+
+    length = sqrtf(lengthSqr);
+
+    return length;
+}
+
+// Get (evaluate) square of length of subspline: Linear 1D
+float GetSubSplineLengthSqrLinear1D(float startPos, float endPos, float t0, float t1)
+{
+    float lengthSqr = 0.0f;
+
+    float dx = (t0 - t1)*startPos + (t1 - t0)*endPos;
+
+    lengthSqr = dx*dx;
+
+    return lengthSqr;
+}
+
+// Get (evaluate) length of subspline: Linear 1D
+float GetSubSplineLengthLinear1D(float startPos, float endPos, float t0, float t1)
+{
+    float length = 0.0f;
+
+    float dx = startPos*(t0 - t1) + endPos*(t1 - t0);
+
+    length = sqrtf(dx*dx);
+
+    return length;
+}
+
 // Get value of t (unbounded) for the point on the line closest to a given position
+// NOTE 1: If the return is less than 0.0f or greater than 1.0f, the nearest point may be in a different segment
+// NOTE 2: Return can be clamped [0.0f .. 1.0f] to snap the point to the start/end of the spline
 float GetSplineNearestTLinear1D(float startPos, float endPos, float point)
 {
-    float edge = 0.0f;
-    edge = endPos - startPos;
+    float t = 0.0f;
 
-    float diff = 0.0f;
-    diff = point - startPos;
-
-    float t = (edge*diff)/(edge*edge);
+    t = (point - startPos)/(endPos - startPos);
 
     return t;
 }
@@ -964,6 +1032,64 @@ BoundingBox2 GetSplineBoundsBezierCubic2D(Vector2 startPos, Vector2 startControl
     return bounds;
 }
 
+// Get (evaluate) squared length of spline: Linear 2D
+float GetSplineLengthSqrLinear2D(Vector2 startPos, Vector2 endPos)
+{
+    float lengthSqr = 0.0f;
+
+    float dx = endPos.x - startPos.x;
+    float dy = endPos.y - startPos.y;
+
+    lengthSqr = dx*dx + dy*dy;
+
+    return lengthSqr;
+}
+
+// Get (evaluate) length of spline: Linear 2D
+float GetSplineLengthLinear2D(Vector2 startPos, Vector2 endPos)
+{
+    float length = 0.0f;
+
+    float dx = endPos.x - startPos.x;
+    float dy = endPos.y - startPos.y;
+
+    length = sqrtf(dx*dx + dy*dy);
+
+    return length;
+}
+
+// Get (evaluate) squared length of subspline: Linear 2D
+float GetSubSplineLengthSqrLinear2D(Vector2 startPos, Vector2 endPos, float t0, float t1)
+{
+    float lengthSqr = 0.0f;
+
+    float a = t0 - t1;
+    float b = t1 - t0;
+
+    float dx = a*startPos.x + b*endPos.x;
+    float dy = a*startPos.y + b*endPos.y;
+
+    lengthSqr = dx*dx + dy*dy;
+
+    return lengthSqr;
+}
+
+// Get (evaluate) length of subspline: Linear 2D
+float GetSubSplineLengthLinear2D(Vector2 startPos, Vector2 endPos, float t0, float t1)
+{
+    float length = 0.0f;
+
+    float a = t0 - t1;
+    float b = t1 - t0;
+
+    float dx = a*startPos.x + b*endPos.x;
+    float dy = a*startPos.y + b*endPos.y;
+
+    length = sqrtf(dx*dx + dy*dy);
+
+    return length;
+}
+
 // Reciprocal radius (or "radians per meter") for a given t [0.0f .. 1.0f], Cubic Bezier
 float GetSplineCurvatureBezierCubic2D(Vector2 startPos, Vector2 startControlPos, Vector2 endControlPos, Vector2 endPos, float t)
 {
@@ -992,6 +1118,8 @@ float GetSplineCurvatureBezierCubic2D(Vector2 startPos, Vector2 startControlPos,
 }
 
 // Get value of t (unbounded) for the point on the line closest to a given position
+// NOTE 1: If the return is less than 0.0f or greater than 1.0f, the nearest point may be in a different segment
+// NOTE 2: Return can be clamped [0.0f .. 1.0f] to snap the point to the start/end of the spline
 float GetSplineNearestTLinear2D(Vector2 startPos, Vector2 endPos, Vector2 point)
 {
     Vector2 edge = { 0 };
@@ -1216,12 +1344,8 @@ Vector3 GetSplineJoltBezierCubic3D(Vector3 startPos, Vector3 startControlPos, Ve
 // Compute spline curve bounding rectangle, Linear Bezier
 BoundingBox3 GetSplineBoundsBezierLinear3D(Vector3 startPos, Vector3 endPos)
 {
-    float xMin;
-    float yMin;
-    float zMin;
-    float xMax;
-    float yMax;
-    float zMax;
+    float xMin, yMin, zMin;
+    float xMax, yMax, zMax;
 
     if (startPos.x < endPos.x)
     {
@@ -1268,12 +1392,8 @@ BoundingBox3 GetSplineBoundsBezierLinear3D(Vector3 startPos, Vector3 endPos)
 // Compute spline curve bounding rectangle, Quadratic Bezier
 BoundingBox3 GetSplineBoundsBezierQuad3D(Vector3 startPos, Vector3 controlPos, Vector3 endPos)
 {
-    float xMin;
-    float yMin;
-    float zMin;
-    float xMax;
-    float yMax;
-    float zMax;
+    float xMin, yMin, zMin;
+    float xMax, yMax, zMax;
 
     if (startPos.x < endPos.x)
     {
@@ -1472,7 +1592,71 @@ BoundingBox3 GetSplineBoundsBezierCubic3D(Vector3 startPos, Vector3 startControl
     return bounds;
 }
 
+// Get (evaluate) squared length of spline: Linear 3D
+float GetSplineLengthSqrLinear3D(Vector3 startPos, Vector3 endPos)
+{
+    float lengthSqr = 0.0f;
+
+    float dx = endPos.x - startPos.x;
+    float dy = endPos.y - startPos.y;
+    float dz = endPos.z - startPos.z;
+
+    lengthSqr = dx*dx + dy*dy + dz*dz;
+
+    return lengthSqr;
+}
+
+// Get (evaluate) length of spline: Linear 3D
+float GetSplineLengthLinear3D(Vector3 startPos, Vector3 endPos)
+{
+    float length = 0.0f;
+
+    float dx = endPos.x - startPos.x;
+    float dy = endPos.y - startPos.y;
+    float dz = endPos.z - startPos.z;
+
+    length = sqrtf(dx*dx + dy*dy + dz*dz);
+
+    return length;
+}
+
+// Get (evaluate) squared length of subspline: Linear 3D
+float GetSubSplineLengthSqrLinear3D(Vector3 startPos, Vector3 endPos, float t0, float t1)
+{
+    float lengthSqr = 0.0f;
+
+    float a = t0 - t1;
+    float b = t1 - t0;
+
+    float dx = a*startPos.x + b*endPos.x;
+    float dy = a*startPos.y + b*endPos.y;
+    float dz = a*startPos.z + b*endPos.z;
+
+    lengthSqr = dx*dx + dy*dy + dz*dz;
+
+    return lengthSqr;
+}
+
+// Get (evaluate) length of subspline: Linear 3D
+float GetSubSplineLengthLinear3D(Vector3 startPos, Vector3 endPos, float t0, float t1)
+{
+    float length = 0.0f;
+
+    float a = t0 - t1;
+    float b = t1 - t0;
+
+    float dx = a*startPos.x + b*endPos.x;
+    float dy = a*startPos.y + b*endPos.y;
+    float dz = a*startPos.z + b*endPos.z;
+
+    length = sqrtf(dx*dx + dy*dy + dz*dz);
+
+    return length;
+}
+
 // Get value of t (unbounded) for the point on the line closest to a given position
+// NOTE 1: If the return is less than 0.0f or greater than 1.0f, the nearest point may be in a different segment
+// NOTE 2: Return can be clamped [0.0f .. 1.0f] to snap the point to the start/end of the spline
 float GetSplineNearestTLinear3D(Vector3 startPos, Vector3 endPos, Vector3 point)
 {
     Vector3 edge = { 0 };
