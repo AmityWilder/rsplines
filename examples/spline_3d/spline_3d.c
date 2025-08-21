@@ -2,6 +2,7 @@
 #include <raymath.h>
 #define RSPLINES_IMPLEMENTATION
 #define RSPLINES_1D
+#define RSPLINES_2D
 #define RSPLINES_3D
 #include <rsplines.h>
 
@@ -20,9 +21,9 @@ int main()
         CAMERA_PERSPECTIVE
     };
 
-    float thicks[] = { 0.0f, 1.0f, -0.675f, 0.5f };
+    SplineSegmentBezierCubic1 thickness = { 0.0f, 1.0f, -0.675f, 0.5f };
 
-    Vector3 points[] = {
+    SplineSegmentBezierCubic3 spline = {
         { 0.0f, 1.0f, -2.0f },
         { -1.0f, 3.0f, 1.0f },
         { 1.0f, 1.0f, 3.0f },
@@ -42,13 +43,14 @@ int main()
         if (draggingPoint == NULL && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
         {
             draggingDistance = INFINITY;
+            Vector3 *splinePoints = (Vector3 *)&spline;
             for (int i = 0; i < 4; ++i)
             {
-                RayCollision collision = GetRayCollisionSphere(mouseRay, points[i], 0.1f);
+                RayCollision collision = GetRayCollisionSphere(mouseRay, splinePoints[i], 0.1f);
                 if (collision.hit && collision.distance < draggingDistance)
                 {
                     draggingDistance = collision.distance;
-                    draggingPoint = &points[i];
+                    draggingPoint = &splinePoints[i];
                 }
             }
         }
@@ -71,14 +73,13 @@ int main()
                 Vector3 point2Prev = { 0 };
                 Vector3 point3Prev = { 0 };
                 Vector3 point4Prev = { 0 };
-                Vector3 ctrl1, ctrl2;
-                GetSplineControlBezierCubic3D(points[0], points[1], points[2], points[3], &ctrl1, &ctrl2);
+                SplineSegmentBezierCubic3 spline1 = SplineSegmentBezierCubic3FromPoints(spline.startPos, spline.startControlPos, spline.endControlPos, spline.endPos);
                 for (int i = 0; i <= 100; ++i)
                 {
                     float t = (float)i/100;
-                    float thick = GetSplinePointBezierCubic1D(thicks[0], thicks[1], thicks[2], thicks[3], t); // Variable thickness
-                    Vector3 point = GetSplinePointBezierCubic3D(points[0], ctrl1, ctrl2, points[3], t);
-                    Vector3 tangent = GetSplineTangentBezierCubic3D(points[0], ctrl1, ctrl2, points[3], t);
+                    float thick = SplineSegmentBezierCubic1Point(thickness, t);
+                    Vector3 point = SplineSegmentBezierCubic3Point(spline1, t);
+                    Vector3 tangent = SplineSegmentBezierCubic3Tangent(spline1, t);
                     Vector3 normalH = Vector3Normalize(Vector3CrossProduct(tangent, (Vector3){ 0, 1, 0 }));
                     Vector3 normalV = Vector3Normalize(Vector3CrossProduct(normalH, tangent));
                     Vector3 point1 = Vector3Add(point, Vector3Scale(normalH, thick));
@@ -99,12 +100,25 @@ int main()
                     point3Prev = point3;
                     point4Prev = point4;
                 }
+                const Vector3 *splineA = (Vector3 *)&spline;
                 for (int i = 0; i < 4; ++i)
                 {
-                    DrawSphereWires(points[i], 0.1f, 2, 6, ((&points[i] == draggingPoint)? YELLOW : MAGENTA));
+                    DrawSphereWires(splineA[i], 0.1f, 2, 6, ((&splineA[i] == draggingPoint)? YELLOW : MAGENTA));
                 }
-                //DrawLine3D(points[0], ctrl1, MAGENTA);
-                //DrawLine3D(points[3], ctrl2, MAGENTA);
+
+                if (draggingPoint != NULL)
+                {
+                    Vector3 cubeSize = { 0.05f, 0.05f, 0.05f };
+                    Vector3 xy = { draggingPoint->x, draggingPoint->y, 0 };
+                    Vector3 xz = { draggingPoint->x, 0, draggingPoint->z };
+                    Vector3 yz = { 0, draggingPoint->y, draggingPoint->z };
+                    DrawLine3D(yz, *draggingPoint, RED);
+                    DrawLine3D(xz, *draggingPoint, GREEN);
+                    DrawLine3D(xy, *draggingPoint, BLUE);
+                    DrawCubeV(yz, cubeSize, RED);
+                    DrawCubeV(xz, cubeSize, GREEN);
+                    DrawCubeV(xy, cubeSize, BLUE);
+                }
 
             EndMode3D();
 

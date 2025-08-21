@@ -2,6 +2,7 @@
 #include <raymath.h>
 #define RSPLINES_IMPLEMENTATION
 #define RSPLINES_1D
+#define RSPLINES_2D
 #define RSPLINES_3D
 #include <rsplines.h>
 
@@ -33,7 +34,7 @@ int main()
         if (IsKeyPressed(KEY_ONE)) degree = SPLINE_LINEAR;
         if (IsKeyPressed(KEY_TWO)) degree = SPLINE_QUAD;
         if (IsKeyPressed(KEY_THREE)) degree = SPLINE_CUBIC;
-        
+
         if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) draggingPoint = NULL;
 
         if (draggingPoint == NULL && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
@@ -69,60 +70,63 @@ int main()
 
         if (degree == SPLINE_LINEAR)
         {
-            DrawSplineSegmentLinear(startPos, endPos, 10.0f, GRAY);
-            Vector2 normal = GetSplineNormalLinear2D(startPos, endPos);
-            float length = (GetSplineLengthLinear2D(startPos, endPos)/dotSeparation);
+            SplineSegmentLinear2 spline = { startPos, endPos };
+            DrawSplineSegmentLinear(spline.startPos, spline.endPos, 10.0f, GRAY);
+            Vector2 normal = SplineSegmentLinear2Normal(spline);
+            float length = (SplineSegmentLinear2Length(spline)/dotSeparation);
             for (int i = 0; i <= (int)length; ++i)
             {
                 float t = (float)i/length;
 
-                Vector2 point = GetSplinePointLinear2D(startPos, endPos, t);
+                Vector2 point = SplineSegmentLinear2Point(spline, t);
                 DrawRectangleV(Vector2Subtract(point, extentSize), boxSize, GREEN);
 
-                Vector2 outlinePointAbove = Vector2Add(GetSplinePointLinear2D(startPos, endPos, t), Vector2Scale(normal, 5.0f));
+                Vector2 outlinePointAbove = Vector2Add(SplineSegmentLinear2Point(spline, t), Vector2Scale(normal, 5.0f));
                 DrawRectangleV(Vector2Subtract(outlinePointAbove, extentSize), boxSize, RED);
 
-                Vector2 outlinePointBelow = Vector2Add(GetSplinePointLinear2D(startPos, endPos, t), Vector2Scale(normal, -5.0f));
+                Vector2 outlinePointBelow = Vector2Add(SplineSegmentLinear2Point(spline, t), Vector2Scale(normal, -5.0f));
                 DrawRectangleV(Vector2Subtract(outlinePointBelow, extentSize), boxSize, BLUE);
             }
         }
         else if (degree == SPLINE_QUAD)
         {
-            DrawSplineSegmentBezierQuadratic(startPos, controlPos1, endPos, 10.0f, GRAY);
+            SplineSegmentBezierQuad2 spline = { startPos, controlPos1, endPos };
+            DrawSplineSegmentBezierQuadratic(spline.startPos, spline.controlPos, spline.endPos, 10.0f, GRAY);
             float length = 40.0f;
             for (int i = 0; i <= (int)length; ++i)
             {
                 float t = (float)i/length;
 
-                Vector2 normal = GetSplineNormalBezierQuad2D(startPos, controlPos1, endPos, t);
+                Vector2 normal = SplineSegmentBezierQuad2Normal(spline, t);
 
-                Vector2 point = GetSplinePointBezierQuad2D(startPos, controlPos1, endPos, t);
+                Vector2 point = SplineSegmentBezierQuad2Point(spline, t);
                 DrawRectangleV(Vector2Subtract(point, extentSize), boxSize, GREEN);
 
-                Vector2 outlinePointAbove = Vector2Add(GetSplinePointBezierQuad2D(startPos, controlPos1, endPos, t), Vector2Scale(normal, 5.0f));
+                Vector2 outlinePointAbove = Vector2Add(SplineSegmentBezierQuad2Point(spline, t), Vector2Scale(normal, 5.0f));
                 DrawRectangleV(Vector2Subtract(outlinePointAbove, extentSize), boxSize, RED);
 
-                Vector2 outlinePointBelow = Vector2Add(GetSplinePointBezierQuad2D(startPos, controlPos1, endPos, t), Vector2Scale(normal, -5.0f));
+                Vector2 outlinePointBelow = Vector2Add(SplineSegmentBezierQuad2Point(spline, t), Vector2Scale(normal, -5.0f));
                 DrawRectangleV(Vector2Subtract(outlinePointBelow, extentSize), boxSize, BLUE);
             }
         }
         else if (degree == SPLINE_CUBIC)
         {
-            DrawSplineSegmentBezierCubic(startPos, controlPos1, controlPos2, endPos, 10.0f, GRAY);
+            SplineSegmentBezierCubic2 spline = { startPos, controlPos1, controlPos2, endPos };
+            DrawSplineSegmentBezierCubic(spline.startPos, spline.startControlPos, spline.endControlPos, spline.endPos, 10.0f, GRAY);
             float length = 40.0f;
             for (int i = 0; i <= (int)length; ++i)
             {
                 float t = (float)i/length;
 
-                Vector2 normal = GetSplineNormalBezierCubic2D(startPos, controlPos1, controlPos2, endPos, t);
+                Vector2 normal = SplineSegmentBezierCubic2Normal(spline, t);
 
-                Vector2 point = GetSplinePointBezierCubic2D(startPos, controlPos1, controlPos2, endPos, t);
+                Vector2 point = SplineSegmentBezierCubic2Point(spline, t);
                 DrawRectangleV(Vector2Subtract(point, extentSize), boxSize, GREEN);
 
-                Vector2 outlinePointAbove = Vector2Add(GetSplinePointBezierCubic2D(startPos, controlPos1, controlPos2, endPos, t), Vector2Scale(normal, 5.0f));
+                Vector2 outlinePointAbove = Vector2Add(SplineSegmentBezierCubic2Point(spline, t), Vector2Scale(normal, 5.0f));
                 DrawRectangleV(Vector2Subtract(outlinePointAbove, extentSize), boxSize, RED);
 
-                Vector2 outlinePointBelow = Vector2Add(GetSplinePointBezierCubic2D(startPos, controlPos1, controlPos2, endPos, t), Vector2Scale(normal, -5.0f));
+                Vector2 outlinePointBelow = Vector2Add(SplineSegmentBezierCubic2Point(spline, t), Vector2Scale(normal, -5.0f));
                 DrawRectangleV(Vector2Subtract(outlinePointBelow, extentSize), boxSize, BLUE);
             }
         }
